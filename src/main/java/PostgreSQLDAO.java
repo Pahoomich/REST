@@ -48,11 +48,11 @@ public class PostgreSQLDAO {
         return jobs;
     }
 
-    public boolean searchById(Integer id){
+    public boolean searchById(Integer id) {
         boolean myflag = true;
         try (Connection connection = ConnectionUtil.getConnection()) {
             Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM job WHERE job_id = " + Integer.toString(id));
+            ResultSet rs = stmt.executeQuery("SELECT * FROM job WHERE job_id = " + id);
             myflag = rs.next();
         } catch (SQLException ex) {
             Logger.getLogger(PostgreSQLDAO.class.getName()).log(Level.SEVERE, null, ex);
@@ -60,8 +60,8 @@ public class PostgreSQLDAO {
         return myflag;
     }
 
-    public int addNew(Job n) {
-        int newID = 0;
+    public String addNew(Job n) {
+        String newIDStr = "";
         try (Connection connection = ConnectionUtil.getConnection()) {
             PreparedStatement rs = connection.prepareStatement("insert into job (job_title, min_salary, max_salary, job_language, work_exp)" +
                     " values (?,?,?,?,?)");
@@ -76,15 +76,16 @@ public class PostgreSQLDAO {
             Statement stmt = connection.createStatement();//вызываем createStatement потому-что select в prepareStatement вызывает ошибку (новые версии)
             ResultSet resultSet = stmt.executeQuery("SELECT currval('\"JOB_job_id_seq\"')");
             resultSet.next();
-            newID = resultSet.getInt("currval");
+            int newID = resultSet.getInt("currval");
+            newIDStr += newID;
         } catch (SQLException ex) {
             Logger.getLogger(PostgreSQLDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return newID;
+        return newIDStr;
     }
 
-    public int updateRecord(int id, Job n) {
-        int affectedrows = 0;
+    public String updateRecord(int id, Job n) {
+        String updateStatus = "successfully";
         try (Connection connection = ConnectionUtil.getConnection()) {
             PreparedStatement rs = connection.prepareStatement("UPDATE job "
                     + "SET job_title = ? , min_salary = ?, max_salary = ?, job_language = ?, work_exp = ?"
@@ -96,25 +97,29 @@ public class PostgreSQLDAO {
             rs.setString(4, n.getJob_language());
             rs.setInt(5, n.getWork_exp());
             rs.setInt(6, id);
-            affectedrows = rs.executeUpdate();
-
+            rs.executeUpdate();
+            if (rs.executeUpdate() == 0) {
+                updateStatus = "error";
+            }
         } catch (SQLException ex) {
             Logger.getLogger(PostgreSQLDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return affectedrows;
+        return updateStatus;
     }
 
-    public int dropRecord(int id) {
-        int affectedrows = 0;
+    public String dropRecord(int id) {
+        String deleteStatus = "successfully";
         try (Connection connection = ConnectionUtil.getConnection()) {
             PreparedStatement rs = connection.prepareStatement("DELETE FROM job WHERE job_id = ?");
             rs.setInt(1, id);
-            affectedrows = rs.executeUpdate();
-
+            rs.executeUpdate();
+            if (rs.executeUpdate() == 0) {
+                deleteStatus = "error";
+            }
         } catch (SQLException ex) {
             Logger.getLogger(PostgreSQLDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return affectedrows;
+        return deleteStatus;
     }
 
 

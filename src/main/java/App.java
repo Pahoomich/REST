@@ -1,3 +1,4 @@
+
 import com.sun.jersey.api.container.grizzly2.GrizzlyServerFactory;
 import com.sun.jersey.api.core.ClassNamesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
@@ -10,7 +11,14 @@ public class App {
         HttpServer server = null;
         try {
             ResourceConfig resourceConfig = new ClassNamesResourceConfig(JobResource.class);
+
+            resourceConfig.getProperties().put("com.sun.jersey.spi.container.ContainerRequestFilters",
+                    "auth.AuthFilter");
+
+            //ResourceConfig resourceConfig = new ClassNamesResourceConfig(JobResource.class);
+
             server = GrizzlyServerFactory.createHttpServer(BASE_URI, resourceConfig);
+
             server.start();
             System.in.read();
             stopServer(server);
